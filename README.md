@@ -14,9 +14,8 @@ Písničky jsou v `public/songs.js`. Novou přidáš takhle:
 Den #1 hraje písničky 1–5, den #2 písničky 6–10 atd. Počet za den je `SONGS_PER_DAY` v `public/app.js`. Až seznam dojde, jede se znovu od začátku.
 Datum dne #1 je `START_DATE` v `public/app.js`.
 
-## Nasazení (CI/CD)
-Každý push do větve `main` spustí GitHub Actions (`.github/workflows/deploy.yml`):
-1. **check**: zkontroluje syntaxi JS a seznam písniček (duplicitní ID atd.),
-2. **deploy**: nahraje složku `public/` na Cloudflare Pages (projekt `hej-ousko`).
+## Nasazení
+Web hostuje **Cloudflare Pages** napojený přímo na tento GitHub repozitář. Každý push do `main` se sám nasadí, žádné tokeny nejsou potřeba.
+Nastavení v Cloudflare: Framework preset **None**, Build command **prázdný**, Build output directory **public**.
 
-V repozitáři na GitHubu je potřeba mít secrets `CLOUDFLARE_API_TOKEN` a `CLOUDFLARE_ACCOUNT_ID`.
+GitHub Actions (`.github/workflows/check.yml`) u každého pushe a pull requestu zkontrolují syntaxi JS a seznam písniček.

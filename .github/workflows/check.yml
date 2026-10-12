@@ -1,10 +1,9 @@
-name: Deploy
+name: Check
 
 on:
   push:
     branches: [main]
   pull_request:
-  workflow_dispatch:
 
 jobs:
   check:
@@ -29,24 +28,3 @@ jobs:
             if (bad.length) { console.error('Neplatné záznamy:', bad); process.exit(1); }
             console.log('OK:', S.length, 'písniček');
           "
-
-  deploy:
-    needs: check
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      deployments: write
-    env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      PROJECT: hej-ousko
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Vytvořit projekt na Cloudflare Pages (jen poprvé)
-        run: npx --yes wrangler@4 pages project create "$PROJECT" --production-branch=main || true
-      - name: Nasadit na Cloudflare Pages
-        run: npx --yes wrangler@4 pages deploy public --project-name="$PROJECT" --branch=main --commit-dirty=true
