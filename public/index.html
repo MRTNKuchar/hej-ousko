@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hádačka – české písničky dne</title>
+  <meta name="description" content="Poznej české písničky z první vteřiny. Každý den 5 nových.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <button class="icon" id="btn-help" aria-label="Jak hrát">?</button>
+    <div class="brand">
+      <h1>HÁDAČKA</h1>
+      <div id="day-label" class="sub"></div>
+    </div>
+    <div class="right">
+      <button class="icon" id="btn-archive" aria-label="Předchozí dny">⟲</button>
+      <button class="icon" id="btn-stats" aria-label="Statistiky">▤</button>
+    </div>
+  </header>
+
+  <main>
+    <nav id="rounds" aria-label="Písničky dne"></nav>
+
+    <section id="summary" hidden>
+      <div id="summary-score"></div>
+      <ol id="summary-list"></ol>
+      <div class="result-actions">
+        <button id="btn-share" class="primary">Sdílet výsledek</button>
+        <button id="btn-prev-day">← Předchozí den</button>
+      </div>
+      <div id="next-in" class="sub"></div>
+    </section>
+
+    <ol id="guesses"></ol>
+
+    <section id="result" hidden>
+      <img id="cover" alt="">
+      <div>
+        <div id="result-msg"></div>
+        <div id="result-song"></div>
+        <a id="result-link" target="_blank" rel="noopener">Poslechnout na Deezeru ↗</a>
+      </div>
+      <div class="result-actions">
+        <button id="btn-next" class="primary">Další písnička →</button>
+      </div>
+    </section>
+
+    <div id="player">
+      <div id="bar">
+        <div id="bar-unlocked"></div>
+        <div id="bar-progress"></div>
+        <div id="bar-marks"></div>
+      </div>
+      <div class="bar-labels"><span id="time-now">0:00</span><span>0:16</span></div>
+      <button id="btn-play" aria-label="Přehrát" disabled>
+        <span id="play-icon">…</span>
+      </button>
+      <div id="load-msg" class="sub">Načítám písničku…</div>
+    </div>
+
+    <form id="guess-form" autocomplete="off">
+      <div class="input-wrap">
+        <ul id="suggestions" hidden></ul>
+        <input id="guess-input" placeholder="Interpret nebo název písničky…" aria-label="Tvůj tip">
+      </div>
+      <div class="form-actions">
+        <button type="button" id="btn-skip">Přeskočit (+1 s)</button>
+        <button type="submit" id="btn-submit" class="primary">Odeslat</button>
+      </div>
+    </form>
+  </main>
+
+  <dialog id="dlg-help">
+    <h2>Jak hrát</h2>
+    <p>Každý den tě čeká <b>5 českých písniček</b>. Pusť si úryvek a poznej ji.</p>
+    <p>Napoprvé slyšíš jen <b>1 vteřinu</b>. Každý špatný tip nebo přeskočení odemkne delší úryvek: 1 → 2 → 4 → 7 → 11 → 16 s.</p>
+    <p>Máš 6 pokusů. Tip vybírej z nabídky.</p>
+    <p class="legend"><span>🟩</span> správně <span>🟨</span> správný interpret <span>🟥</span> vedle <span>⬛</span> přeskočeno</p>
+    <p>Každý den jsou nové písničky. Předchozí dny najdeš pod ⟲.</p>
+    <button class="primary close">Jdu hrát</button>
+  </dialog>
+
+  <dialog id="dlg-archive">
+    <h2>Předchozí dny</h2>
+    <div id="archive-list"></div>
+    <button class="close">Zavřít</button>
+  </dialog>
+
+  <dialog id="dlg-stats">
+    <h2>Statistiky</h2>
+    <div id="stats"></div>
+    <button class="close">Zavřít</button>
+  </dialog>
+
+  <div id="toast" hidden></div>
+
+  <script src="songs.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
