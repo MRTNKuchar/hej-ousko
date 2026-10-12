@@ -15,7 +15,7 @@ Den #1 hraje písničky 1–5, den #2 písničky 6–10 atd. Počet za den je `S
 Datum dne #1 je `START_DATE` v `public/app.js`.
 
 ## Nasazení
-Web hostuje **Cloudflare Pages** napojený přímo na tento GitHub repozitář. Každý push do `main` se sám nasadí, žádné tokeny nejsou potřeba.
-Nastavení v Cloudflare: Framework preset **None**, Build command **prázdný**, Build output directory **public**.
+Web hostuje **Cloudflare Workers** (statické soubory, viz `wrangler.jsonc`) napojený přímo na tento GitHub repozitář. Každý push do `main` se sám nasadí, žádné tokeny nejsou potřeba.
+Nastavení v Cloudflare: Build command **prázdný**, Deploy command `npx wrangler deploy`.
 
 GitHub Actions (`.github/workflows/check.yml`) u každého pushe a pull requestu zkontrolují syntaxi JS a seznam písniček.

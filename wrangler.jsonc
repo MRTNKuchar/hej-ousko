@@ -1,0 +1,8 @@
+{
+  // Statická stránka na Cloudflare Workers: nahraje se jen složka public/
+  "name": "hej-ousko",
+  "compatibility_date": "2025-09-01",
+  "assets": {
+    "directory": "./public"
+  }
+}
