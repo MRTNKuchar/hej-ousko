@@ -22,6 +22,11 @@
   </header>
 
   <main>
+    <nav id="modes" aria-label="Režim">
+      <a href="./" data-mode="mix">Mix</a>
+      <a href="?mod=rap" data-mode="rap">CZ rap</a>
+    </nav>
+
     <nav id="rounds" aria-label="Písničky dne"></nav>
 
     <section id="summary" hidden>
@@ -80,6 +85,7 @@
     <p>Máš 6 pokusů. Tip vybírej z nabídky.</p>
     <p class="legend"><span>🟩</span> správně <span>🟨</span> správný interpret <span>🟥</span> vedle <span>⬛</span> přeskočeno</p>
     <p>Každý den jsou nové písničky. Předchozí dny najdeš pod ⟲.</p>
+    <p>Nahoře si přepneš režim: <b>Mix</b> (všechny žánry) nebo <b>CZ rap</b>. Každý má vlastní písničky, archiv i statistiky.</p>
     <button class="primary close">Jdu hrát</button>
   </dialog>
 
@@ -98,6 +104,7 @@
   <div id="toast" hidden></div>
 
   <script src="songs.js"></script>
+  <script src="rap.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

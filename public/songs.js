@@ -1,7 +1,7 @@
 // Písničky, které se hádají. `id` = ID skladby na Deezeru (https://www.deezer.com/track/<id>).
-// Každý den se hraje 5 písniček po sobě: den #1 = písničky 1–5, den #2 = 6–10 atd.
+// Hra si z nich každý den sama vybere 5 (zamíchané, pro všechny stejné), takže na pořadí v seznamu nezáleží.
 // Novou písničku přidáš tak, že ji najdeš na deezer.com, z adresy zkopíruješ číslo a přidáš řádek.
-// POZOR: přidávej jen na konec seznamu, jinak se přehází písničky u už odehraných dnů.
+// Přidáním nebo odebráním písničky se přehází i už odehrané dny, takže seznam ideálně měň před spuštěním.
 const SONGS = [
   { id: 503101912, artist: "Sto zvířat", title: "Dáma s čápem" },
   { id: 4074463711, artist: "Ewa Farna", title: "Vzpomeneš si?" },

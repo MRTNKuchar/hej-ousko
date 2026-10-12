@@ -4,8 +4,24 @@ const STEPS = [1, 2, 4, 7, 11, 16];   // délka úryvku v sekundách pro jednotl
 const MAX_SECONDS = STEPS[STEPS.length - 1];
 const SONGS_PER_DAY = 5;              // kolik písniček se hraje za den
 const START_DATE = [2026, 10, 1];     // den #1 (rok, měsíc, den)
-const STORAGE_KEY = "hadacka:v2";
 const MARKS = { skip: "⬛", wrong: "🟥", artist: "🟨", correct: "🟩", empty: "⬜" };
+
+const MODES = {
+  mix: { name: "Mix", songs: SONGS, decoys: DECOYS, storage: "hadacka:v3", share: "Hádačka" },
+  rap: { name: "CZ rap", songs: RAP_SONGS, decoys: RAP_DECOYS, storage: "hadacka:rap:v1", share: "Hádačka CZ rap" },
+};
+const params = new URLSearchParams(location.search);
+const modeId = MODES[params.get("mod")] ? params.get("mod") : "mix";
+const MODE = MODES[modeId];
+
+// odkaz na den v aktuálním režimu
+function dayUrl(n) {
+  const p = new URLSearchParams();
+  if (modeId !== "mix") p.set("mod", modeId);
+  if (n !== undefined) p.set("den", n);
+  const q = p.toString();
+  return q ? `?${q}` : "./";
+}
 
 const $ = (id) => document.getElementById(id);
 
@@ -22,16 +38,82 @@ function dateForDay(n) {
 }
 
 const todayNum = Math.max(1, dayNumberFor(new Date()));
-const requested = parseInt(new URLSearchParams(location.search).get("den"), 10);
+const requested = parseInt(params.get("den"), 10);
 const dayNum = Number.isInteger(requested) && requested >= 1 && requested <= todayNum ? requested : todayNum;
-const songsForDay = (n) => Array.from({ length: SONGS_PER_DAY }, (_, i) => SONGS[((n - 1) * SONGS_PER_DAY + i) % SONGS.length]);
+
+// ---------- randomizer ----------
+// Pořadí písniček je pro všechny hráče stejné (seed = režim + kolo), ale není vidět ze seznamu.
+// Seznam se projde celý, pak se zamíchá znovu a jinak. V jednom dni ani ve dvou dnech po sobě
+// není stejný interpret a písnička se nevrátí dřív, než zazní aspoň polovina ostatních.
+
+function hashSeed(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619);
+  return h >>> 0;
+}
+
+function mulberry32(a) {
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function shuffled(list, seed) {
+  const rnd = mulberry32(hashSeed(seed));
+  const a = [...list];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildSchedule(songs, days) {
+  // písničky se stejným ID (kdyby byly v seznamu dvakrát) bereme jen jednou
+  const unique = [...new Map(songs.map((s) => [s.id, s])).values()];
+  const memory = Math.floor(unique.length / 2);
+  const schedule = [];
+  const recent = [];
+  let pool = [];
+  let cycle = 0;
+  let prevDay = [];
+  for (let d = 1; d <= days; d++) {
+    const today = [];
+    for (let slot = 0; slot < SONGS_PER_DAY; slot++) {
+      // dalším zamícháním doplníme zásobník dřív, než dojde, aby bylo pořád z čeho vybírat
+      if (pool.length < 20) pool.push(...shuffled(unique.filter((s) => !pool.includes(s)), `${modeId}:${cycle++}`));
+      const usedArtist = (s) => today.some((t) => t.artist === s.artist);
+      const rules = [
+        (s) => !usedArtist(s) && !prevDay.some((t) => t.artist === s.artist) && !recent.includes(s.id),
+        (s) => !usedArtist(s) && !recent.includes(s.id),
+        (s) => !usedArtist(s),
+        () => true,
+      ];
+      let i = -1;
+      for (const ok of rules) if ((i = pool.findIndex(ok)) >= 0) break;
+      const song = pool.splice(i, 1)[0];
+      today.push(song);
+      recent.push(song.id);
+      if (recent.length > memory) recent.shift();
+    }
+    schedule.push(today);
+    prevDay = today;
+  }
+  return schedule;
+}
+
+const schedule = buildSchedule(MODE.songs, todayNum);
+const songsForDay = (n) => schedule[n - 1];
 const daySongs = songsForDay(dayNum);
 
 // ---------- uložený postup ----------
 
 function loadStore() {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { days: {} };
+    return JSON.parse(localStorage.getItem(MODE.storage)) || { days: {} };
   } catch {
     return { days: {} };
   }
@@ -39,13 +121,17 @@ function loadStore() {
 
 function saveStore() {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+    localStorage.setItem(MODE.storage, JSON.stringify(store));
   } catch {}
 }
 
-const newRound = () => ({ guesses: [], status: "playing" });
+const newRound = (song) => ({ songId: song.id, guesses: [], status: "playing" });
 const store = loadStore();
-const day = store.days[dayNum] || (store.days[dayNum] = { rounds: daySongs.map(newRound) });
+// když se mezitím změnil seznam písniček, kola s jinou písničkou začnou znovu
+const saved = store.days[dayNum];
+const day = (store.days[dayNum] = {
+  rounds: daySongs.map((s, i) => (saved?.rounds[i]?.songId === s.id ? saved.rounds[i] : newRound(s))),
+});
 
 const roundDone = (r) => r.status !== "playing";
 const dayDone = (d) => d.rounds.every(roundDone);
@@ -65,7 +151,7 @@ const sameSong = (a, b) => sameArtist(a, b) && norm(a.title) === norm(b.title);
 
 const OPTIONS = [];
 const seenOptions = new Set();
-for (const s of [...SONGS, ...DECOYS]) {
+for (const s of [...MODE.songs, ...MODE.decoys]) {
   const key = norm(label(s));
   if (seenOptions.has(key)) continue;
   seenOptions.add(key);
@@ -210,6 +296,7 @@ const roundMark = (r) => (r.status === "won" ? "🟩" : r.status === "lost" ? "�
 const wins = (d) => d.rounds.filter((r) => r.status === "won").length;
 
 function render() {
+  document.querySelectorAll("#modes a").forEach((el) => el.classList.toggle("active", el.dataset.mode === modeId));
   const date = dateForDay(dayNum).toLocaleDateString("cs-CZ");
   $("day-label").textContent = `#${dayNum} · ${date}${dayNum === todayNum ? "" : " · archiv"}`;
 
@@ -290,9 +377,9 @@ function renderSummary() {
 }
 
 function shareText() {
-  const url = `${location.origin}${location.pathname}?den=${dayNum}`;
+  const url = new URL(dayUrl(dayNum), location.href).href;
   const lines = day.rounds.map((r) => (r.status === "won" ? "🔊" : "🔇") + squares(r));
-  return `Hádačka #${dayNum} 🎵 ${wins(day)}/${SONGS_PER_DAY}\n${lines.join("\n")}\n${url}`;
+  return `${MODE.share} #${dayNum} 🎵 ${wins(day)}/${SONGS_PER_DAY}\n${lines.join("\n")}\n${url}`;
 }
 
 async function share() {
@@ -310,7 +397,7 @@ async function share() {
 
 function updateCountdown() {
   if (dayNum !== todayNum) {
-    $("next-in").innerHTML = `<a href="./" style="color:inherit">Zpět na dnešní písničky →</a>`;
+    $("next-in").innerHTML = `<a href="${dayUrl()}" style="color:inherit">Zpět na dnešní písničky →</a>`;
     return;
   }
   const now = new Date();
@@ -377,7 +464,7 @@ function renderArchive() {
     const started = d?.rounds.some((r) => r.guesses.length);
     const st = !started ? "" : dayDone(d) ? `${wins(d)}/${SONGS_PER_DAY}` : "▶";
     const a = document.createElement("a");
-    a.href = n === todayNum ? "./" : `?den=${n}`;
+    a.href = n === todayNum ? dayUrl() : dayUrl(n);
     if (n === todayNum) a.className = "today";
     a.innerHTML = `<span>#${n}</span><span class="st">${st}</span>`;
     list.appendChild(a);
@@ -435,7 +522,7 @@ $("guess-input").addEventListener("keydown", (e) => {
 });
 
 $("btn-share").addEventListener("click", share);
-$("btn-prev-day").addEventListener("click", () => (location.search = `?den=${dayNum - 1}`));
+$("btn-prev-day").addEventListener("click", () => (location.href = dayUrl(dayNum - 1)));
 $("btn-help").addEventListener("click", () => $("dlg-help").showModal());
 $("btn-archive").addEventListener("click", () => { renderArchive(); $("dlg-archive").showModal(); });
 $("btn-stats").addEventListener("click", () => { renderStats(); $("dlg-stats").showModal(); });

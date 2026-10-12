@@ -17,14 +17,18 @@ jobs:
         run: |
           node --check public/app.js
           node --check public/songs.js
+          node --check public/rap.js
       - name: Kontrola seznamu písniček
         run: |
           node -e "
-            eval(require('fs').readFileSync('public/songs.js', 'utf8') + ';globalThis.S = SONGS');
-            const ids = S.map((s) => s.id);
-            const dup = ids.filter((id, i) => ids.indexOf(id) !== i);
-            if (dup.length) { console.error('Duplicitní ID:', dup); process.exit(1); }
-            const bad = S.filter((s) => !Number.isInteger(s.id) || !s.artist || !s.title);
-            if (bad.length) { console.error('Neplatné záznamy:', bad); process.exit(1); }
-            console.log('OK:', S.length, 'písniček');
+            const fs = require('fs');
+            for (const [file, name] of [['public/songs.js', 'SONGS'], ['public/rap.js', 'RAP_SONGS']]) {
+              const S = new Function(fs.readFileSync(file, 'utf8') + ';return ' + name)();
+              const ids = S.map((s) => s.id);
+              const dup = ids.filter((id, i) => ids.indexOf(id) !== i);
+              if (dup.length) { console.error('Duplicitní ID:', dup); process.exit(1); }
+              const bad = S.filter((s) => !Number.isInteger(s.id) || !s.artist || !s.title);
+              if (bad.length) { console.error('Neplatné záznamy:', bad); process.exit(1); }
+              console.log('OK:', file, S.length, 'písniček');
+            }
           "

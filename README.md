@@ -9,9 +9,9 @@ Stačí otevřít `public/index.html` v prohlížeči. Ukázky se stahují z Dee
 Písničky jsou v `public/songs.js`. Novou přidáš takhle:
 1. Najdi ji na https://www.deezer.com a otevři stránku skladby.
 2. Z adresy `deezer.com/track/123456` zkopíruj číslo.
-3. Přidej řádek **na konec** seznamu `SONGS`: `{ id: 123456, artist: "Interpret", title: "Název" },`
+3. Přidej do seznamu `SONGS` (CZ rap: `RAP_SONGS` v `public/rap.js`) řádek: `{ id: 123456, artist: "Interpret", title: "Název" },`
 
-Den #1 hraje písničky 1–5, den #2 písničky 6–10 atd. Počet za den je `SONGS_PER_DAY` v `public/app.js`. Až seznam dojde, jede se znovu od začátku.
+Hra si každý den sama vybere 5 písniček (počet je `SONGS_PER_DAY` v `public/app.js`). Pořadí je zamíchané, pro všechny hráče stejné, v jednom dni ani ve dvou dnech po sobě se neopakuje interpret. Až se projdou všechny, zamíchají se znovu a jinak. Přidáním písničky se přehází i staré dny.
 Datum dne #1 je `START_DATE` v `public/app.js`.
 
 ## Nasazení

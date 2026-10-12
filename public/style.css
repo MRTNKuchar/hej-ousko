@@ -228,3 +228,23 @@ dialog .close { margin-top: 12px; width: 100%; }
   font-weight: 600;
   z-index: 10;
 }
+
+/* přepínač režimů */
+#modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 4px;
+  gap: 4px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+#modes a {
+  padding: 8px;
+  text-align: center;
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: 7px;
+}
+#modes a.active { background: var(--accent); color: #fff; }
